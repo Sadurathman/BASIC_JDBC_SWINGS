@@ -11,8 +11,8 @@ create table student
 	dept varchar2(5)
 );
 */
+
 import skcet_student.Data.Student;
-import skcet_student.Client.Login;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,20 +21,18 @@ import java.sql.ResultSet;
 import javax.swing.JOptionPane;
 
 public class DB {
-	Connection con;
-	String query;
-	PreparedStatement ps;
-	ResultSet rs;
-	public Student s;
+	private Connection con;
+	private String query;
+	private PreparedStatement ps;
+	private ResultSet rs;
 	
 	public DB(){
 		try{
-			s = new Student();
 			Class.forName("oracle.jdbc.driver.OracleDriver");
 			con = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:XE","skcet","java");
 		}
 		catch(Exception e){
-			JOptionPane.showMessageDialog(null,"  Exception   -->"+e);
+			JOptionPane.showMessageDialog(null," Database Connection Error   -->"+e);
 		}
 	}
 	
@@ -42,26 +40,46 @@ public class DB {
 		query= "select * from student where rno = ?";
 		
 		try{
-		ps = con.prepareStatement(query);
-		ps.setString(1,rno);
-		rs = ps.executeQuery();
-		
-		if(rs.next()){
-			s.setRno(rs.getString(1));
-			s.setName(rs.getString(2));
-			s.setPassword(rs.getString(3));
-			s.setMobile(rs.getString(4));
-			s.setCity(rs.getString(5).equals("Hosteller"));
-			s.setDept(rs.getString(6));
-		}
+			ps = con.prepareStatement(query);
+			ps.setString(1,rno);
+			rs = ps.executeQuery();
+			
+			if(rs.next()){
+				Student s = new Student();
+				s.setRno(rs.getString(1));
+				s.setName(rs.getString(2));
+				s.setPassword(rs.getString(3));
+				s.setMobile(rs.getString(4));
+				s.setCity(rs.getString(5).equals("Hosteller"));
+				s.setDept(rs.getString(6));
+				return s;
+			}
 		}
 		catch(Exception e){
-			JOptionPane.showMessageDialog(null,"  Exception   -->"+e);
+			System.out.println("dbToObject ---> "+e);
 		}
-		return s;
+		return null;
 	}
 	
-	public void objToDb(Student s){
+	public Student login(String rno, String pass){
+		query= "select rno from student where rno = ? and password=?";
+		try{
+			ps = con.prepareStatement(query);
+			ps.setString(1,rno);
+			ps.setString(2, pass);
+			rs = ps.executeQuery();
+			if(rs.next()){
+				return dbToObj(rno);
+			}
+		}
+		catch(Exception e){
+			System.out.println("Login Error ---> "+e);
+		}
+		return null;
+	}
+
+	public Student register(Student s){
+		query = "insert into student values(?,?,?,?,?,?)";
 		try{
 			ps = con.prepareStatement(query);
 			ps.setString(1,s.getRno());
@@ -72,43 +90,35 @@ public class DB {
 			ps.setString(6,s.getDept());
 			ps.executeUpdate();	
 			con.commit();
-			Login.viewScreen(s);
+			return login(s.getRno(), s.getPassword());
 		}
 		catch(Exception e){
-			JOptionPane.showMessageDialog(null,"  Exception   -->"+e);
+			System.out.println("Registration Error ---> "+e);
 		}
+		return null;
 	}
 	
-	public void login(String rno, String pass){
-		query= "select rno, password from student where rno = ?";
+	public Student update(Student s){
+		query="update student set name=?,password=?,mobile=?,type=?,dept=? where rno=?";
 		try{
 			ps = con.prepareStatement(query);
-			ps.setString(1,rno);
-			rs = ps.executeQuery();
-			if(rs.next()){
-				s = dbToObj(rno);
-				Login.viewScreen(s);
-			}else{
-				JOptionPane.showMessageDialog(null,"Invalid Credentials!");
-			}
+			ps.setString(1,s.getName());
+			ps.setString(2,s.getPassword());
+			ps.setString(3,s.getMobile());
+			ps.setString(4,s.getCity()?"Hosteller":"Day Schollar");
+			ps.setString(5,s.getDept());
+			ps.setString(6,s.getRno());
+			ps.executeUpdate();	
+			con.commit();
 		}
 		catch(Exception e){
-			JOptionPane.showMessageDialog(null,"  Exception   -->"+e);
+			System.out.println("Updation Error ---> "+e);
 		}
-	}
-
-	public void register(Student s){
-		query = "insert into student values(?,?,?,?,?,?)";
-		objToDb(s);
-	}
-	
-	public void update(Student s){
-		query="update student set name=?,password=?,mobile=?,type=?,dept=? where rno=?";
-		objToDb(s);
+		return s;
 	}
 	
 	public void delete(Student s){
-		query="delete from student where eid=?";
+		query="delete from student where rno=?";
 		try{
 			ps = con.prepareStatement(query);
 			ps.setString(1,s.getRno());
@@ -116,7 +126,7 @@ public class DB {
 			con.commit();
 		}
 		catch(Exception e){
-			JOptionPane.showMessageDialog(null,"  Exception   -->"+e);
+			System.out.println("Deletion Error ---> "+e);
 		}
 	}
 }

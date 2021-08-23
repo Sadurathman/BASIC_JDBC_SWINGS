@@ -17,12 +17,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Register implements FocusListener, ItemListener, ActionListener{
-	private JPasswordField passInput, repassInput;
-	private JLabel userLabel, passLabel,repassLabel, headerLabel, rnoLabel, mobileLabel, deptLabel, hdLabel;
-	private JTextField userInput, rnoInput, mobileInput;
+	private static JPasswordField passInput, repassInput;
+	private static JLabel userLabel, passLabel,repassLabel, headerLabel, rnoLabel, mobileLabel, deptLabel, hdLabel;
+	private static JTextField userInput, rnoInput, mobileInput;
 	private ButtonGroup bg;
-	private JRadioButton rdbDs, rdbHs;
-	private JComboBox<String> dept;
+	private static JRadioButton rdbDs, rdbHs;
+	private static JComboBox<String> dept;
 	
 	Register(JPanel rightPanel){
 		userLabel = new JLabel("Name :");
@@ -146,7 +146,7 @@ public class Register implements FocusListener, ItemListener, ActionListener{
 		Student s = new Student();
 		s.setRno(rnoInput.getText());
 		s.setName(userInput.getText());
-		s.setPassword(new String(passInput.getPassword()));
+		s.setPassword(new String(repassInput.getPassword()));
 		s.setMobile(mobileInput.getText());
 		if(rdbHs.isSelected())s.setCity(true);
 		if(rdbDs.isSelected())s.setCity(false);
@@ -154,14 +154,19 @@ public class Register implements FocusListener, ItemListener, ActionListener{
 		return s;
 	}
 	
-	public boolean Validate(){
+	public static void reset(){
+		userInput.setText("");
+		passInput.setText("");
+		repassInput.setText("");
+		rnoInput.setText("");
+		mobileInput.setText("");
+		rdbHs.setSelected(false);
+		rdbDs.setSelected(false);
+		dept.setSelectedIndex(0);
+	}
+	
+	public boolean RegisterValidate(){
 		boolean valid = true;
-		
-		if(userInput.getText().length()==0){
-			userInput.setForeground(Color.RED);
-			userLabel.setForeground(Color.RED);
-			valid = false;
-		}
 		if(new String(passInput.getPassword()).equals(new String(repassInput.getPassword()))){
 			Pattern pattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&-+=()])(?=\\S+$).{8,20}$");
 			Matcher match = pattern.matcher(new String(passInput.getPassword()));
@@ -185,6 +190,37 @@ public class Register implements FocusListener, ItemListener, ActionListener{
 		if(!match.matches()){
 			rnoInput.setForeground(Color.red);			
 			rnoLabel.setForeground(Color.red);			
+			valid = false;
+		}
+		return (valid && Validate());
+	}
+	
+	public boolean UpdateValidate(Student s){
+		boolean valid = true;
+		if(new String(passInput.getPassword()).equals(s.getPassword())){
+			Pattern pattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&-+=()])(?=\\S+$).{8,20}$");
+			Matcher match = pattern.matcher(new String(repassInput.getPassword()));
+			if(!match.matches()){
+				repassLabel.setForeground(Color.red);
+				repassInput.setForeground(Color.red);
+				valid = false;
+			}
+		}else{
+			passInput.setForeground(Color.red);
+			passLabel.setForeground(Color.red);
+			valid = false;
+			JOptionPane.showMessageDialog(null,"Invalid Password!");
+		}
+		
+		return (valid && Validate());
+	}
+	
+	public boolean Validate(){
+		boolean valid = true;
+		
+		if(userInput.getText().length()==0){
+			userInput.setForeground(Color.RED);
+			userLabel.setForeground(Color.RED);
 			valid = false;
 		}
 		

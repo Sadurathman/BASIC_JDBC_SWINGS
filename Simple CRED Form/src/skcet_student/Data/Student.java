@@ -1,7 +1,12 @@
 package skcet_student.Data;
 
+import java.io.Serializable;
 
-public class Student {
+
+public class Student implements Serializable {
+	
+	private static final long serialVersionUID = 22L;
+	
 	private String rno;
 	private String name;
 	private String password;
@@ -55,5 +60,10 @@ public class Student {
     
     public void setPassword(String password){
     	this.password = password;
+    }
+    
+    @Override
+    public String toString(){
+    	return (name+" from "+dept+" department.");
     }
 }

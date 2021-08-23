@@ -1,12 +1,9 @@
 package skcet_student.Client;
 
 import skcet_student.Data.Student;
-import skcet_student.Server.DB;
 
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
-
-
 
 import java.awt.*;
 import java.awt.event.*;
@@ -18,16 +15,15 @@ public class Login implements ActionListener{
 	private static JPanel leftPanel, rightPanel, registerPanel, viewPanel, updatePanel;
 	private JLabel userIcon, userLabel, passLabel, headerLabel, welcomeLabel;
 	private static JLabel viewName;
-	private JTextField userInput;
-	private JPasswordField passInput;
+	private static JTextField userInput;
+	private static JPasswordField passInput;
 	private JButton cancelButton, loginButton, logoutButton, registerButton, registerSwapButton, loginSwapButton, updateButton, deleteButton, editButton;
-	private DB db;
+	private Client client;
 	private static Student s;
 	private Register register;
 	
 	public Login(){
 		//Initialization
-		db = new DB();
 		frame = new JFrame("SKCET Student Portal");
 		frame.setSize(1000,720);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -191,22 +187,32 @@ public class Login implements ActionListener{
 	    frame.setLocation(x, y);
 	}
 	
+	public static void reset(){
+		userInput.setText("");
+		passInput.setText("");
+	}
+	
 	public void actionPerformed(ActionEvent e){
 		Object button = e.getSource();
 		
 		if(button == loginButton){
-			db.login(userInput.getText(), new String(passInput.getPassword()));
+			client = new Client();
+			s = client.login(userInput.getText(), new String(passInput.getPassword()));
 		}	
-		if(button == registerButton && register.Validate()){
+		if(button == registerButton && register.RegisterValidate()){
+			client = new Client();
 			s = register.UiToObj();
-			db.register(s);
+			client.register(s);
 		}
-		if(button == updateButton && register.Validate()){
+		if(button == updateButton && register.UpdateValidate(s)){
+			client = new Client();
 			s = register.UiToObj();
-			db.update(s);
+			client.update(s);
 		}		
 		if(button == deleteButton){
-			db.delete(s);
+			client = new Client();
+			client.delete(s);
+			viewName.setText("");
 			viewPanel.setVisible(false);
 			rightPanel.setVisible(true);
 		}
@@ -225,6 +231,7 @@ public class Login implements ActionListener{
 		}
 		if(button == logoutButton){
 			frame.dispose();
+			client = null;
 			new Login();
 		}
 		if(button == cancelButton){
@@ -244,9 +251,5 @@ public class Login implements ActionListener{
 		
 		viewPanel.setVisible(true);
 		leftPanel.setVisible(true);
-	}
-	
-	public static void main(String arg[]){
-		new Login();
 	}
 }
